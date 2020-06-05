@@ -1,0 +1,342 @@
+---
+
+Table of Contents:
+1: Introduction
+2: Read, View, Structure, Summary
+3: Clean Data
+4: Train Dataset & Test Dataset
+5: Multiple R-Squared
+6: Adjusted R-Squared
+7: Complete Linear Regression Equation
+8: Predict & Compare
+9: Residual Plot
+10: Histogram
+11: Transaction Log
+12: Conclusion
+
+---
+
+INTRODUCTION
+
+This project is to investigate the impact of a number of automobile engine factors on the vehicle’s mpg. I will walk you through the process of analyzing and interpreting all the steps. I used the dataset "auto-mpg.csv" that contains information for 398 different automobile models. Variables analyzed: mpg, cylinder, displacement, horsepower, weight, acceleration, model.year, origin, and car.name.
+
+Firstly, using 300 observations in 'auto-mpg.csv' as train dataset, I will run linear regression to determine the relationship between mpg and appropriate variables. As I analyze the data and the results with the train dataset, I will adjust the parameters to get the intended/best result. The remaining observations of the dataset will be in  test dataset and will be analyzed using a complete linear regression equation gotten from the train dataset. All appropriate results, a log, and comments will be included in this report to better understand the methods and the journey.
+
+---
+
+READ, VIEW, STRUCTURE, SUMMARY
+
+Firstly, I read the "auto-mpg" file using 'read.csv(file(choose))' function to get an access to the data for this project. I can also use 'read.csv("/Users/...path.../auto-mpg.csv")' but I'll use the first method here. I view it using a 'View()' function to get a picture for the data. I then get a statistical summary using 'summary()' function to better understand. I also like to use the 'str()' function to know the basic details of it's structure in the start. 
+
+```{r}
+auto_mpg <- read.csv(file.choose())
+auto_mpg_read <- read.csv("/Users/apatel8/Documents/DS 510/Labs/auto-mpg.csv")
+View(auto_mpg)
+str(auto_mpg)
+summary(auto_mpg)
+```
+
+This dataset has 9 variables (mpg is 1; other 8 variables will be analyzed to study it's feature). The types for this data are num, int, and Factor. The reason for horsepower being a factor is that it includes some '?'. The variables we will use for correlation between mpg and other variables should to be numeric, the same type as mpg. The car.name variable values are non-numeric, and thus will not be included in the analysis.  
+
+This summary gives us the basic statistics such as Min, 1st Qu, Median, Mean, 3rd Qu, and Max for each variable. We should glance through it to get a good perspective. Statistics of mpg variable: IQR = 29.00 - 17.50 = 11.5; mpg dataset is well-within lower and upper boundaries. As I analyze each variable individually, I will comment on what I observe.  
+
+---
+
+CLEAN DATA
+
+Non-numeric variables need their types changed to numeric to avoid errors. We will change the 'horsepower' variable (factor type) to numeric. The 'horsepower' variable column also contains some '?' values, whose rows will be excluded. I found the row numbers by putting the observations in 'horsepower' in ascending order.   
+
+```{r}
+auto_mpg1 <- auto_mpg[-c(33,127,331,337,355,375),]
+auto_mpg_clean <- auto_mpg1[,-c(9)]
+model <- lm(mpg~., data = auto_mpg)
+summary(model)
+model1 <- lm(mpg~., data = auto_mpg_clean)
+summary(model1)
+auto_mpg_clean$horsepower <- as.numeric(auto_mpg_clean$horsepower)
+str(auto_mpg_clean)
+```
+
+The Multiple R-squared for the mpg vs. entire dataset was ~0.99. Without the color.name variable, it was ~0.90. We will not include them in our regression because we want to find a good correlation with a good R-squared value by using only the numeric values.  
+
+We will clean again after we run correlation for the variables individually to determine which ones to use according to their significance and R-squared.  
+
+---
+
+TRAIN DATASET & TEST DATASET
+
+Divide the "auto-mpg" dataset into 2 datasets: train dataset of 300 observations and test dataset of 301 to 398 observations. **Could stores the randomly generated values but that will change the values everytime, so not ideal for this report.**
+
+```{r}
+train <- auto_mpg_clean[1:300,]
+View(train)
+test <- auto_mpg_clean[301:398,]
+View(test)
+```
+
+Again, the train dataset will be used to determine a complete linear regression equation that will be used for the test dataset.
+
+---
+
+MULTIPLE R-SQUARED:
+
+MPG vs. Cylinder
+
+Scatterplot to find the relationship between 'mpg' and 'cylinder' in the training set.
+
+```{r}
+traincylinder <- lm(train$mpg ~ train$cylinder, data = train)
+summary(traincylinder)
+plot(train$cylinder, train$mpg, main = "MPG vs. Cylinder", xlab = "cylinder", ylab = "mpg")
+```
+This scatterplot shows us the distribution of cylinders. 4 cylinders have a higher range of mpg as well as higher values of mpg, containing the maximum of 46. 8 cylinders has some of the lowest mpg observations, containing the minimum of 9. 6 cylinders subset group seem to be around the mean of the full dataset of 23.51.
+
+The linear model on a train dataset of 300 observations gave us a *** significance of <2e-16 p-value and ~0.66 Multiple R-squared. The Adjusted R-squared value is also ~0.66 because it hasn't been adjusted yet. 
+
+______________
+
+MPG vs. Displacement
+
+Scatterplot to find the relationship between 'mpg' and 'displacement' in the training set. From the table, 'displacement' values seem to decrease as mpg values increase.
+
+```{r}
+traindisplacement <- lm(train$displacement ~ train$mpg, data = train)
+summary(traindisplacement)
+plot(train$displacement, train$mpg, main = "MPG vs. Displacement", xlab = "displacement", ylab = "mpg")
+```
+
+This scatterplot shows us a linear negative-slope trend in 'displacement' when comparing mpg. It does have a variance, especially at lower 'displacement'. The results show it's significance of *** with a p-value of 2.2e-16 and Multiple R-squared of ~0.71. It will be included in the adjusted regression.  
+
+______________
+
+MPG vs. Horsepower
+
+Scatterplot to see the relationship between 'mpg' and 'horsepower' in the training dataset. I would assume that it would be significant.
+
+```{r}
+trainhorsepower <- lm(train$horsepower ~ train$mpg, data = train)
+summary(trainhorsepower)
+plot(train$horsepower, train$mpg, main = "MPG vs. Displacement", xlab = "displacement", ylab = "mpg")
+```
+This is why I did not choose my career in cars. Although it shows a significance code of ***, since it's Multiple R-squared values are ~0.23, it is too variable and they will not be included in the adjusted training set.
+
+______________
+
+MPG vs. Weight
+
+Scatterplot to see the relationship between 'mpg' and 'weight' in the training dataset. Again, I would assume that it would be significant.
+
+```{r}
+trainweight <- lm(train$weight ~ train$mpg, data = train)
+summary(trainweight)
+plot(train$weight, train$mpg, main = "MPG vs. Weight", xlab = "weight", ylab = "mpg")
+```
+
+Voila, the highest significance so far. The results show *** significance of <2.2e-16 p-value and ~0.77 Multiple R-squared. Weight variable will be included in the adjusted regression. 
+
+______________
+
+MPG vs. Acceleration
+
+Scatterplot to see the relationship between mpg and acceleration in the training dataset. Again, I would assume for this to be significant, but since the horsepower was insignificant, I wouldn't put my money on this.
+
+```{r}
+trainacceleration <- lm(train$acceleration ~ train$mpg, data = train)
+summary(trainacceleration)
+plot(train$acceleration, train$mpg, main = "MPG vs. Acceleration", xlab = "acceleration", ylab = "mpg")
+```
+
+It looks like I saved my bet. Although the coefficients repeatedly have *** significance and p-value of <2.2e-16, the Multiple R-squared of ~0.2 is too low to be significant. 
+
+
+______________
+
+MPG vs. Model Car
+
+Scatterplot to see the relationship between 'mpg' and 'model.car' in the training dataset. I wouldn't think it would be much significant, but I would assume that there was a continuous slow increase during that time period.
+
+```{r}
+trainmodel.year <- lm(train$model.year ~ train$mpg, data = train)
+summary(trainmodel.year)
+plot(train$model.year, train$mpg, main = "MPG vs. Model Year", xlab = "model.year", ylab = "mpg")
+```
+
+Somewhat correct assumption. It can be seen as a tiny increasing wave, but it's variance is tremendously high. That can be proved by the Multiple R-squared value of ~0.08. Thus, it will not be included in the adjusted regression.
+
+__________
+
+MPG vs. Origin
+
+Scatterplot to see the relationship between 'mpg' and 'origin' in the training dataset.
+
+```{r}
+trainorigin <- lm(train$origin ~ train$mpg, data = train)
+summary(trainorigin)
+plot(train$origin, train$mpg, main = "MPG vs. Origin", xlab = "origin", ylab = "mpg")
+```
+Last but not the least, the origin variable is insignificant because of its Multiple R-squared value of ~0.35, and it will not be included.
+
+---
+
+ADJUSTED R-SQUARED
+
+Now, the variables will be combined in different ways to find the highest R-squared. What is R-squared and why is R-squared itself significant? R-squared simply explains the variability of a model; that is, how our dependent variable varies in proportion to the independent variable. We would love to get a R-squared value of 1.0 (or 100%), but there will always be variance caused by several factors. Here, we attempt to find the highest R-squared value by trying different combinations between numeric variables and "adjusting" the R-squared value. 
+
+Firsly, let's try and combine every variable with a R-squared of >0.60. The following variables had high enough significance to try: 'cylinder' (~0.66), 'displacement' (~0.71), and 'weight' (~0.77).  
+
+```{r}
+attach(train)
+adjustedmodel <- lm(mpg ~ cylinder + displacement + weight, data = train)
+summary(adjustedmodel)
+```
+
+The cylinder variable had a 0.8591 p-value and a ' ' significance code, thus it has no significance. Let's try with just 'displacement' and 'weight'.
+
+```{r}
+attach(train)
+adjustedmodel2 <- lm(mpg ~ displacement + weight, data = train)
+summary(adjustedmodel2)
+```
+
+The adjusted regression between mpg vs. displacement and weight gives a Multiple and Adjusted Regression of ~0.77 each with displacement being * significant and weight being *** significant. We will run the test using this model.
+The following was not part of the plan, but I will run linear regression by combining more factors to see their effect and their significance. 
+
+```{r}
+attach(train)
+adjustedmodel3 <- lm(mpg ~ cylinder + displacement + horsepower + weight + acceleration, data = train)
+summary(adjustedmodel3)
+```
+
+Like expected, the other variables like horsepower and accleration, which one would assume would have a big effect, are not significant. That is because those factors cause high variance in the results (which I would assume they do), so they are insignicant for a regression model. The Multiple and Adjusted R-Squared values remain to be ~0.77 because they are not significant. The displacement doesn't show any significance either this time but since it shows a significance with weight alone, I will include it in the test function.
+
+---
+
+PREDICT & COMPARE
+
+For the remaining 98 samples in the dataset, we will use the best linear models (mpg vs. displacement+weight, mpg vs. weight) to predict each automobile’s mpg. We will report how the predictions compare to the car’s actual reported mpg. 
+
+Let's first predict values using weight variable only. We will use the coef function to get the B0 and B1 values from the linear equation and use that to predict with the test observations. We will then compare to the actual values by calculating the difference.
+
+```{r}
+pred <- coef(trainweight)[1] + coef(trainweight)[2]*test$mpg
+View(pred)
+test_mpg <- auto_mpg_clean[,1]
+View(test_mpg)
+error <-  pred - test_mpg
+View(error)
+```
+
+The error was extremely high and ranged from ~(-59) to ~3500. Now, let's try to predict using the 'displacement' and 'weight' variables. We will find the coefficients in that adjusted model, then define them individually.
+
+```{r}
+pred1 <- coef(adjustedmodel2)[1] + coef(adjustedmodel2)[2]*test$displacement + coef(adjustedmodel2)[3]*test$weight
+View(pred1)
+test_mpg1 <- auto_mpg_clean[,1]
+error1 <- test_mpg1 - pred1
+View(error1)
+summary(error1)
+error2 <- error1[-c(387:392),]
+```
+
+Error1 ranged from ~(-18) to ~25. The error1's IQR = 3.584-(-7.904) = ~11.5, and therefore, the Max value of error and some other higher values are outside the upper boundary of ~15. THE ERROR CURVE IS LEFT=SKEWED, WHICH INDICATES THAT _______________. The error mean of -1.786 looks acceptable to compare the predicted values to actual values.
+
+---
+
+RESIDUAL PLOT
+
+Following is a plot of the error differences between predicted and actual values. Let's also plot a line with intercept and slope at 0 for a clear view.
+
+```{r}
+plot(error1, xlab = 'Error1', ylab = 'Residual')
+abline(0,0)
+```
+
+---
+
+HISTOGRAM
+
+We will also create a histogram with the error1 data, having the x-axis showing error residual and y-axis to show density. The red line on the histogram shows ___________________. The mean, variance, and standard deviation of error1 will be calculated for a normal distribution line to compare with the predicted line. 
+
+```{r}
+hist(error1, prob = T, breaks = 10, main = 'Error1- mpg vs. displacement+weight', xlab = 'Residual', ylab = 'Density')
+lines(density(error1), col='red')
+mean_e <- mean(error1)
+var_e <- var(error1)
+sd_e <- sqrt(var_e)
+x_e <- seq(-4,4, length=20)
+y_e <- dnorm(x_e, mean_e, sd_e)
+lines(x_e, y_e, col = 'blue')
+
+```
+
+---
+
+TRANSACTION LOG
+
+Following is the order for all the necessary code lines of this report. This log serves as a perfect example of the code lines of a project. The lines will have a description comment to save time in remembering or understanding. I've removed some lines to improve efficiency and only kept if essential for use. This log can also be used to efficiently review and make changes in the future.  
+
+auto_mpg <- read.csv(file.choose()) #read 
+auto_mpg_read <- read.csv("/Users/apatel8/Documents/DS 510/Labs/auto-mpg.csv") #2nd read option
+View(auto_mpg) #view dataset
+str(auto_mpg) #structure
+summary(auto_mpg) #statistics
+auto_mpg1 <- auto_mpg[-c(33,127,331,337,355,375),] #remove ?
+auto_mpg_clean <- auto_mpg1[,-c(9)] #remove car.name
+model <- lm(mpg~., data = auto_mpg) #R-squared full dataset
+auto_mpg_clean$horsepower <- as.numeric(auto_mpg_clean$horsepower) #horsepower numeric
+train <- auto_mpg_clean[1:300,] #300 train dataset
+test <- auto_mpg_clean[301:398,] #98 test dataset
+traincylinder <- lm(train$mpg ~ train$cylinder, data = train) #train cylinder
+summary(traincylinder) #significant
+traindisplacement <- lm(train$displacement ~ train$mpg, data = train) #train displacement
+summary(traindisplacement) #significant
+trainhorsepower <- lm(train$horsepower ~ train$mpg, data = train) #train horsepower
+summary(trainhorsepower) #insignificant
+trainweight <- lm(train$weight ~ train$mpg, data = train) #train weight
+summary(trainweight) #significant
+trainacceleration <- lm(train$acceleration ~ train$mpg, data = train) #train acceleration
+summary(trainacceleration) #insignificant
+trainmodel.year <- lm(train$model.year ~ train$mpg, data = train) #train model.year
+summary(trainmodel.year) #insignificant
+trainorigin <- lm(train$origin ~ train$mpg, data = train) #train origin
+summary(trainorigin) #insignificant
+attach(train) #attach for chunk
+adjustedmodel <- lm(mpg ~ cylinder + displacement + weight, data = train) #adjusted
+summary(adjustedmodel) #significance
+adjustedmodel2 <- lm(mpg ~ displacement + weight, data = train) #adjusted
+summary(adjustedmodel2) #significant
+adjustedmodel3 <- lm(mpg ~ cylinder + displacement + horsepower + weight + acceleration, data = train) #check
+summary(adjustedmodel3) #insignificant
+pred <- coef(trainweight)[1] + coef(trainweight)[2]*test$mpg #predict from weight
+test_mpg <- auto_mpg_clean[,1] #test mpg set
+error <-  pred - test_mpg #error difference
+pred1 <- coef(adjustedmodel2)[1] + coef(adjustedmodel2)[2]*test$displacement + coef(adjustedmodel2)[3]*test$weight #predict from displacement, weight
+test_mpg1 <- auto_mpg_clean[,1] #test mpg1 set
+error1 <- test_mpg1 - pred1 #error difference
+
+error2 <- error1[-c(387:391),] #remove NA
+
+plot(error1, xlab = 'Error1', ylab = 'Residual')
+abline(0,0)
+hist(error1, prob = T, breaks = 10, main = 'Error1- mpg vs. displacement+weight', xlab = 'Residual', ylab = 'Density')
+lines(density(error1), col='red')
+mean_e <- mean(error1)
+var_e <- var(error1)
+sd_e <- sqrt(var_e)
+x_e <- seq(-4,4, length=20)
+y_e <- dnorm(x_e, mean_e, sd_e)
+lines(x_e, y_e, col = 'blue')
+
+---
+
+CONCLUSION
+
+In conclusion, we analyzed two variables from the 'auto-mpg' dataset to be significant factors for the vehicles studied in this dataset. The car names were not used for analysis, but all the other variables were used since they were numeric and the same type as mpg. We analyzed each variable individually to test its significance and multiple R-squared. R-squared value tells us how dependable it is. All the variables had *** or 100% significance, but many had a low R-squared so their high variance was too risky to include when adjusting. Although some variable can have observations that can cause a significant change of R-squared, it's multiple R-squared being very low proves its high variance and can be a gamble to include. The variables were then adjusted to find the best fit with the highest adjusted R-squared value. The significant variables -cylinder, displacement, and weight- were combined in a linear regression. Since only displacement and weight showed significance, * and *** respectively, the complete equation of linear regression was found using those two variables. 
+
+Then, the best linear model obtained from the training dataset was used to predict each automobile's mpg. The predictions were compared to the car's actual reported mpg values. The error ranged from ~(-18) to ~15, but the error mean of -1.786 is acceptable since it's close to 0. 
+
+This was a great exercise to use this automobile dataset to analyze and adjust to reach the best outcome. 
+
+---
+
+“Hiding within those mounds of data is knowledge that could change the life of a patient, or change the world.”
