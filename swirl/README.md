@@ -2,3 +2,4 @@
 - Exploratory Data Analysis
 - Mathematical Biostatistics Bootcamp
 - Regression Models
+- Statistical Inference
