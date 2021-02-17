@@ -1,1 +1,4 @@
-
+- Data Analysis
+- Exploratory Data Analysis
+- Mathematical Biostatistics Bootcamp
+- Regression Models
